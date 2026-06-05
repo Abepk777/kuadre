@@ -31,8 +31,8 @@ const ForgotPassword = () => {
         <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
             <div className="w-full max-w-md bg-card p-8 rounded-3xl border border-border shadow-xl">
                 <div className="flex justify-center mb-8">
-                    <img src={logoClaro} alt="Kuadre Logo" className="h-12 dark:hidden" />
-                    <img src={logoOscuro} alt="Kuadre Logo" className="h-12 hidden dark:block" />
+                    <img src={logoOscuro} alt="Kuadre Logo" className="h-12 dark:hidden" />
+                    <img src={logoClaro} alt="Kuadre Logo" className="h-12 hidden dark:block" />
                 </div>
                 
                 <h2 className="text-2xl font-black text-center mb-2">Recuperar Contraseña</h2>
