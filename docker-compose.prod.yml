@@ -12,6 +12,7 @@ services:
             - APP_ENV=production
             - DB_HOST=pgsql
             - REDIS_HOST=redis
+            - SERVER_NAME=:80
         depends_on:
             - pgsql
             - redis
