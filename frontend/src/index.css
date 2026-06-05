@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-border: hsl(var(--border));
+  --color-ring: hsl(var(--ring));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+
+    --primary: 221 83% 53%; /* Azul Rey (Royal Blue) */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    
+    --border: 214.3 31.8% 91.4%;
+    --ring: 221 83% 53%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 210 10% 8%; /* Casi negro (ej. #121316) */
+    --foreground: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 210 10% 15%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 210 10% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --card: 210 10% 11%; /* Un tono sutilmente más claro que el fondo */
+    --card-foreground: 210 40% 98%;
+
+    --border: 210 10% 18%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  input, textarea, select {
+    @apply bg-transparent text-foreground;
+  }
+}
+
+/* Executive styling cards */
+.solid-panel {
+  @apply bg-card border border-border shadow-sm;
+}
+
+/* Custom Scrollbar for sleek UI */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Premium Tour Styles (driver.js) */
+.kuadre-premium-tour {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--foreground)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 1.5rem !important;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3) !important;
+    padding: 1.5rem !important;
+    font-family: inherit !important;
+}
+
+.kuadre-premium-tour .driver-popover-title {
+    font-size: 1.25rem !important;
+    font-weight: 900 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.kuadre-premium-tour .driver-popover-description {
+    color: hsl(var(--muted-foreground)) !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+}
+
+.kuadre-premium-tour .driver-popover-footer {
+    margin-top: 1.5rem !important;
+}
+
+.kuadre-premium-tour button.driver-popover-next-btn, 
+.kuadre-premium-tour button.driver-popover-done-btn {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    border: none !important;
+    border-radius: 0.75rem !important;
+    font-weight: 700 !important;
+    padding: 0.5rem 1rem !important;
+    text-shadow: none !important;
+    box-shadow: 0 4px 14px 0 hsl(var(--primary)/0.39) !important;
+}
+
+.kuadre-premium-tour button.driver-popover-prev-btn {
+    background-color: transparent !important;
+    color: hsl(var(--muted-foreground)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 0.75rem !important;
+    font-weight: 600 !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.kuadre-premium-tour .driver-popover-progress-text {
+    color: hsl(var(--muted-foreground)) !important;
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+}

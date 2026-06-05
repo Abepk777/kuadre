@@ -1,0 +1,141 @@
+services:
+    app:
+        build: ./backend
+        restart: unless-stopped
+        expose:
+            - "8081"
+        env_file:
+            - ./backend/.env
+        networks:
+            - sail
+        environment:
+            - APP_ENV=production
+            - DB_HOST=pgsql
+            - REDIS_HOST=redis
+        depends_on:
+            - pgsql
+            - redis
+
+    scheduler:
+        build: ./backend
+        restart: unless-stopped
+        env_file:
+            - ./backend/.env
+        environment:
+            - APP_ENV=production
+            - DB_HOST=pgsql
+            - REDIS_HOST=redis
+        command: php artisan schedule:work
+        networks:
+            - sail
+        depends_on:
+            - pgsql
+            - redis
+            - app
+
+    frontend:
+        build:
+            context: ./frontend
+        restart: unless-stopped
+        expose:
+            - "80"
+        environment:
+            - VIRTUAL_HOST=app.kuadre.krecit.com,api.kuadre.krecit.com
+            - LETSENCRYPT_HOST=app.kuadre.krecit.com,api.kuadre.krecit.com
+            - LETSENCRYPT_EMAIL=admin@krecit.com
+        networks:
+            - sail
+        depends_on:
+            - app
+
+    nginx-proxy:
+        image: nginxproxy/nginx-proxy
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - html:/usr/share/nginx/html
+            - dhparam:/etc/nginx/dhparam
+            - vhost:/etc/nginx/vhost.d
+            - certs:/etc/nginx/certs:ro
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+        networks:
+            - sail
+
+    acme-companion:
+        image: nginxproxy/acme-companion
+        restart: unless-stopped
+        volumes_from:
+            - nginx-proxy
+        volumes:
+            - certs:/etc/nginx/certs:rw
+            - acme:/etc/acme.sh
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        environment:
+            - DEFAULT_EMAIL=admin@krecit.com
+        networks:
+            - sail
+        depends_on:
+            - nginx-proxy
+
+    pgsql:
+        image: postgres:18-alpine
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: ${DB_DATABASE:-kuadre}
+            POSTGRES_USER: ${DB_USERNAME:-kuadre}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:-kuadre2026}
+            PGDATA: /var/lib/postgresql/data
+        volumes:
+            - pgsql-data:/var/lib/postgresql/data
+        networks:
+            - sail
+
+    redis:
+        image: redis:alpine
+        restart: unless-stopped
+        networks:
+            - sail
+
+    evolution:
+        container_name: evolution_api
+        image: evoapicloud/evolution-api:latest
+        restart: always
+        environment:
+            - AUTHENTICATION_API_KEY=kuadresecure2026
+            - WEBHOOK_GLOBAL_ENABLED=false
+            - DATABASE_ENABLED=true
+            - DATABASE_PROVIDER=postgresql
+            - DATABASE_CONNECTION_URI=postgresql://kuadre:kuadre2026@pgsql:5432/evolution_db?schema=public
+            - DATABASE_CONNECTION_CLIENT_NAME=evolution_api
+            - CACHE_REDIS_ENABLED=true
+            - CACHE_REDIS_URI=redis://redis:6379/6
+            - CACHE_REDIS_PREFIX_KEY=evolution
+            - CONFIG_SESSION_PHONE_CLIENT=Kuadre
+            - CONFIG_SESSION_PHONE_NAME=Edge
+            - VIRTUAL_HOST=evolution.kuadre.krecit.com
+            - LETSENCRYPT_HOST=evolution.kuadre.krecit.com
+            - VIRTUAL_PORT=8080
+        volumes:
+            - evolution-data:/evolution/instances
+        networks:
+            - sail
+        depends_on:
+            - pgsql
+            - redis
+
+networks:
+    sail:
+        driver: bridge
+
+volumes:
+    evolution-data:
+        driver: local
+    pgsql-data:
+        driver: local
+    html:
+    dhparam:
+    vhost:
+    certs:
+    acme:
