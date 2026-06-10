@@ -1,0 +1,75 @@
+cat << 'EOF' > /var/www/kuadre/backend/.env
+APP_NAME=Kuadre
+APP_ENV=production
+APP_KEY=base64:V2XalPLdEbxmirLSYivY2btwzT9BcgSKnxG5gWDcyyo=
+APP_DEBUG=false
+APP_URL=https://app.kuadre.krecit.com
+APP_TIMEZONE="America/Caracas"
+
+APP_LOCALE=es
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=es_ES
+
+APP_MAINTENANCE_DRIVER=file
+
+BCRYPT_ROUNDS=12
+
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=error
+
+DB_CONNECTION=pgsql
+DB_HOST=pgsql
+DB_PORT=5432
+DB_DATABASE=kuadre
+DB_USERNAME=kuadre
+DB_PASSWORD=Kuadre2026.
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=.kuadre.krecit.com
+
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=redis
+
+CACHE_STORE=database
+
+MEMCACHED_HOST=127.0.0.1
+
+REDIS_CLIENT=phpredis
+REDIS_HOST=redis
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+MAIL_MAILER=log
+MAIL_SCHEME=null
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_FROM_ADDRESS="hello@kuadre.krecit.com"
+MAIL_FROM_NAME="Kuadre"
+
+OCTANE_SERVER=frankenphp
+
+EVOLUTION_API_URL=http://evolution:8080
+EVOLUTION_API_KEY=kuadresecure2026
+
+VAPID_PUBLIC_KEY=BBPilhBK_Fd-JkBpC4bVNwsBONTHPI6UuUjtQFDwfzJ3yJTzuzD6XSB4h_Wx0u3PBKL68qCIcfDSdqo3b5n_a_Q
+VAPID_PRIVATE_KEY=J7lQwS9ubXQIxt1uQJ6a_QZpU3MM0gC-4glmY9KGSXw
+EOF
+
+cat << 'EOF' > /var/www/kuadre/.env
+DB_DATABASE=kuadre
+DB_USERNAME=kuadre
+DB_PASSWORD=Kuadre2026.
+EOF
+
+cd /var/www/kuadre
+docker-compose -f docker-compose.prod.yml up -d --build
+docker-compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
+docker-compose -f docker-compose.prod.yml exec -T app php artisan db:seed --force

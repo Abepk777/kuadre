@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Store, User, Lock, Mail, Loader2, Rocket } from 'lucide-react';
+import { Store, User, Lock, Mail, Loader2, Rocket, AlertCircle, CheckCircle2 } from 'lucide-react';
+import axios from '../../lib/axios';
 import anime from 'animejs';
 import logoVerticalClaro from '../../assets/Recurso 14logo-vertical-modoclaro.svg';
 import logoVerticalOscuro from '../../assets/Recurso 13logo-vertical-modooscuro.svg';
@@ -20,8 +21,14 @@ export default function Register() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    
+    const [availability, setAvailability] = useState({
+        username: { status: 'idle', message: '' },
+        email: { status: 'idle', message: '' }
+    });
 
     const formRef = useRef(null);
+    const typingTimeoutRef = useRef(null);
 
     useEffect(() => {
         anime({
@@ -34,8 +41,37 @@ export default function Register() {
         });
     }, []);
 
+    const checkFieldAvailability = async (field, value) => {
+        if (!value || value.length < 3) {
+            setAvailability(prev => ({ ...prev, [field]: { status: 'idle', message: '' } }));
+            return;
+        }
+
+        setAvailability(prev => ({ ...prev, [field]: { status: 'loading', message: '' } }));
+        try {
+            const response = await axios.post('/auth/check-availability?field=' + field + '&value=' + value);
+            if (response.data.available) {
+                setAvailability(prev => ({ ...prev, [field]: { status: 'success', message: '' } }));
+            } else {
+                setAvailability(prev => ({ ...prev, [field]: { status: 'error', message: `Este ${field === 'email' ? 'correo' : 'usuario'} ya está registrado.` } }));
+            }
+        } catch (err) {
+            setAvailability(prev => ({ ...prev, [field]: { status: 'idle', message: '' } }));
+        }
+    };
+
     const handleChange = (e) => {
-        setFormData({...formData, [e.target.name]: e.target.value});
+        const { name, value } = e.target;
+        setFormData({...formData, [name]: value});
+        
+        if (name === 'username' || name === 'email') {
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+            typingTimeoutRef.current = setTimeout(() => {
+                checkFieldAvailability(name, value);
+            }, 500);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -116,7 +152,15 @@ export default function Register() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Usuario</label>
-                            <input type="text" name="username" required value={formData.username} onChange={handleChange} className="w-full px-4 py-2.5 rounded-xl border bg-background/50 focus:ring-2 focus:ring-primary outline-none transition-all" placeholder="juanp" />
+                            <div className="relative">
+                                <input type="text" name="username" required value={formData.username} onChange={handleChange} className={`w-full px-4 py-2.5 rounded-xl border bg-background/50 focus:ring-2 outline-none transition-all pr-10 ${availability.username.status === 'error' ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'}`} placeholder="juanp" />
+                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    {availability.username.status === 'loading' && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
+                                    {availability.username.status === 'success' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                                    {availability.username.status === 'error' && <AlertCircle className="h-4 w-4 text-red-500" />}
+                                </div>
+                            </div>
+                            {availability.username.status === 'error' && <p className="text-red-500 text-xs mt-1 font-medium">{availability.username.message}</p>}
                         </div>
                     </div>
 
@@ -126,8 +170,14 @@ export default function Register() {
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Mail className="h-5 w-5 text-gray-400" />
                             </div>
-                            <input type="email" name="email" required value={formData.email} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 rounded-xl border bg-background/50 focus:ring-2 focus:ring-primary outline-none transition-all" placeholder="juan@ejemplo.com" />
+                            <input type="email" name="email" required value={formData.email} onChange={handleChange} className={`w-full pl-10 pr-10 py-2.5 rounded-xl border bg-background/50 focus:ring-2 outline-none transition-all ${availability.email.status === 'error' ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'}`} placeholder="juan@ejemplo.com" />
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                {availability.email.status === 'loading' && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
+                                {availability.email.status === 'success' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                                {availability.email.status === 'error' && <AlertCircle className="h-4 w-4 text-red-500" />}
+                            </div>
                         </div>
+                        {availability.email.status === 'error' && <p className="text-red-500 text-xs mt-1 font-medium">{availability.email.message}</p>}
                     </div>
 
                     <div>
@@ -140,7 +190,7 @@ export default function Register() {
                         </div>
                     </div>
 
-                    <button type="submit" disabled={loading} className="w-full flex justify-center items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 rounded-xl font-medium transition-all active:scale-95 mt-2">
+                    <button type="submit" disabled={loading || availability.username.status === 'error' || availability.email.status === 'error'} className="w-full flex justify-center items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 rounded-xl font-medium transition-all disabled:opacity-50 active:scale-95 mt-2">
                         {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Rocket className="h-5 w-5" />}
                         {loading ? 'Creando...' : 'Comenzar 7 días gratis'}
                     </button>

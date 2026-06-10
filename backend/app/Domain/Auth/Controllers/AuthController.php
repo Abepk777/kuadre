@@ -249,4 +249,20 @@ class AuthController extends Controller
             ] : null
         ]);
     }
+
+    public function checkAvailability(Request $request)
+    {
+        $field = $request->query('field');
+        $value = $request->query('value');
+
+        if (!in_array($field, ['email', 'username'])) {
+            return response()->json(['error' => 'Invalid field'], 400);
+        }
+
+        $exists = User::where($field, $value)->exists();
+
+        return response()->json([
+            'available' => !$exists
+        ]);
+    }
 }
