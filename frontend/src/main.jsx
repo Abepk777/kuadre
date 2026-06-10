@@ -6,6 +6,12 @@ import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { registerSW } from 'virtual:pwa-register'
 
+window.deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window.deferredPrompt = e;
+});
+
 const updateSW = registerSW({
   onNeedRefresh() {},
   onOfflineReady() {},

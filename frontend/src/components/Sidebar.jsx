@@ -17,9 +17,17 @@ const Sidebar = ({ isOpen, toggleSidebar, isLocked }) => {
     const [isInstallable, setIsInstallable] = useState(false);
 
     useEffect(() => {
+        const checkInstallable = () => {
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                setIsInstallable(false);
+            } else if (window.deferredPrompt) {
+                setIsInstallable(true);
+            }
+        };
+        
+        checkInstallable();
+        
         const handleBeforeInstallPrompt = (e) => {
-            e.preventDefault();
-            setDeferredPrompt(e);
             setIsInstallable(true);
         };
 
@@ -33,16 +41,16 @@ const Sidebar = ({ isOpen, toggleSidebar, isLocked }) => {
     }, []);
 
     const handleInstallClick = async () => {
-        if (!deferredPrompt) {
+        if (!window.deferredPrompt) {
             toast.error('La instalación no está disponible en este momento. Intente abrir la app en Chrome o Safari.');
             return;
         }
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
+        window.deferredPrompt.prompt();
+        const { outcome } = await window.deferredPrompt.userChoice;
         if (outcome === 'accepted') {
             setIsInstallable(false);
         }
-        setDeferredPrompt(null);
+        window.deferredPrompt = null;
     };
 
     let menuItems = [
