@@ -34,6 +34,23 @@ services:
             - redis
             - app
 
+    worker:
+        build: ./backend
+        restart: unless-stopped
+        env_file:
+            - ./backend/.env
+        environment:
+            - APP_ENV=production
+            - DB_HOST=pgsql
+            - REDIS_HOST=redis
+        command: php artisan queue:work --queue=default --tries=3
+        networks:
+            - sail
+        depends_on:
+            - pgsql
+            - redis
+            - app
+
     frontend:
         build:
             context: ./frontend
@@ -108,7 +125,7 @@ services:
             - WEBHOOK_GLOBAL_ENABLED=false
             - DATABASE_ENABLED=true
             - DATABASE_PROVIDER=postgresql
-            - DATABASE_CONNECTION_URI=postgresql://kuadre:kuadre2026@pgsql:5432/evolution_db?schema=public
+            - DATABASE_CONNECTION_URI=postgresql://kuadre:Kuadre2026.@pgsql:5432/evolution_db?schema=public
             - DATABASE_CONNECTION_CLIENT_NAME=evolution_api
             - CACHE_REDIS_ENABLED=true
             - CACHE_REDIS_URI=redis://redis:6379/6
@@ -126,6 +143,40 @@ services:
             - pgsql
             - redis
 
+    # 📦 Servidor MinIO S3 para Producción
+    minio:
+        image: minio/minio:latest
+        container_name: kuadre_minio
+        restart: unless-stopped
+        environment:
+            MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-kuadre_s3_admin}
+            MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-kuadre_s3_secret_2026}
+            # Configuramos el subdominio con SSL automático para servir archivos mutimedia
+            VIRTUAL_HOST: storage.kuadre.krecit.com
+            LETSENCRYPT_HOST: storage.kuadre.krecit.com
+            LETSENCRYPT_EMAIL: admin@krecit.com
+            VIRTUAL_PORT: 9000
+        ports:
+            - "8900:8900" # Exponemos la consola web por si necesitas entrar usando IP:8900
+        volumes:
+            - minio-data-prod:/data
+        networks:
+            - sail
+
+    # 🛠️ Automatización de creación de Bucket y política pública
+    minio-setup:
+        image: minio/mc:latest
+        container_name: kuadre_minio_setup
+        depends_on:
+            - minio
+        environment:
+            MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-kuadre_s3_admin}
+            MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-kuadre_s3_secret_2026}
+        networks:
+            - sail
+        entrypoint: >
+            /bin/sh -c " sleep 5; mc alias set myminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; mc mb myminio/kuadre-bucket --ignore-existing; mc anonymous set download myminio/kuadre-bucket; exit 0; "
+
 networks:
     sail:
         driver: bridge
@@ -134,6 +185,9 @@ volumes:
     evolution-data:
         driver: local
     pgsql-data:
+        driver: local
+    minio-data-prod:
+        # Volumen persistente para almacenar tus archivos en el VPS
         driver: local
     html:
     dhparam:
