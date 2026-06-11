@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Support\Facades\Storage;
 use App\Domain\Sales\Controllers\SaleController;
 use App\Domain\Sales\Controllers\CreditController;
 use App\Domain\Inventory\Controllers\ProductController;
@@ -12,6 +12,20 @@ use App\Domain\Auth\Controllers\AuthController;
 use App\Domain\Subscriptions\Controllers\SubscriptionPaymentController;
 use App\Domain\Admin\Controllers\AdminPanelController;
 
+
+Route::prefix('v1')->group(function () {
+    // Esta ruta proxy permite que las imágenes se sirvan desde tu API
+    // Ejemplo de llamada: GET /api/v1/storage/logo.png
+    Route::get('/storage/{path}', function ($path) {
+        $disk = \Illuminate\Support\Facades\Storage::disk('s3');
+        
+        if (!$disk->exists($path)) {
+            abort(404);
+        }
+
+        return $disk->response($path);
+    })->where('path', '.*');
+});
 Route::prefix('v1')->group(function () {
     Route::get('/ping', function() { return 'pong'; });
     

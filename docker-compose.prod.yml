@@ -1,6 +1,8 @@
 services:
     app:
         build: ./backend
+        volumes:
+            - ./backend:/var/www/kuadre
         restart: unless-stopped
         expose:
             - "80"
@@ -13,6 +15,7 @@ services:
             - DB_HOST=pgsql
             - REDIS_HOST=redis
             - SERVER_NAME=:80
+            - LOG_CHANNEL=stderr
         depends_on:
             - pgsql
             - redis
@@ -27,6 +30,8 @@ services:
             - DB_HOST=pgsql
             - REDIS_HOST=redis
         command: php artisan schedule:work
+        healthcheck:
+          disable: true
         networks:
             - sail
         depends_on:
@@ -43,7 +48,12 @@ services:
             - APP_ENV=production
             - DB_HOST=pgsql
             - REDIS_HOST=redis
+            - LOG_CHANNEL=stderr
         command: php artisan queue:work --queue=default --tries=3
+        healthcheck:
+          disable: true
+        volumes:
+            - ./backend:/var/www/kuadre
         networks:
             - sail
         depends_on:
@@ -61,6 +71,8 @@ services:
             - VIRTUAL_HOST=app.kuadre.krecit.com
             - LETSENCRYPT_HOST=app.kuadre.krecit.com
             - LETSENCRYPT_EMAIL=admin@krecit.com
+        volumes:
+            - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
         networks:
             - sail
         depends_on:
@@ -105,6 +117,8 @@ services:
             POSTGRES_USER: ${DB_USERNAME:-kuadre}
             POSTGRES_PASSWORD: ${DB_PASSWORD:-kuadre2026}
             PGDATA: /var/lib/postgresql/data
+        ports:
+            - "5432:5432"
         volumes:
             - pgsql-data:/var/lib/postgresql/data
         networks:
@@ -132,9 +146,6 @@ services:
             - CACHE_REDIS_PREFIX_KEY=evolution
             - CONFIG_SESSION_PHONE_CLIENT=Kuadre
             - CONFIG_SESSION_PHONE_NAME=Edge
-            - VIRTUAL_HOST=evolution.kuadre.krecit.com
-            - LETSENCRYPT_HOST=evolution.kuadre.krecit.com
-            - VIRTUAL_PORT=8080
         volumes:
             - evolution-data:/evolution/instances
         networks:
@@ -151,13 +162,9 @@ services:
         environment:
             MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-kuadre_s3_admin}
             MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-kuadre_s3_secret_2026}
-            # Configuramos el subdominio con SSL automático para servir archivos mutimedia
-            VIRTUAL_HOST: storage.kuadre.krecit.com
-            LETSENCRYPT_HOST: storage.kuadre.krecit.com
-            LETSENCRYPT_EMAIL: admin@krecit.com
-            VIRTUAL_PORT: 9000
         ports:
             - "8900:8900" # Exponemos la consola web por si necesitas entrar usando IP:8900
+        command: server /data --console-address ":8900"
         volumes:
             - minio-data-prod:/data
         networks:
@@ -175,7 +182,13 @@ services:
         networks:
             - sail
         entrypoint: >
-            /bin/sh -c " sleep 5; mc alias set myminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; mc mb myminio/kuadre-bucket --ignore-existing; mc anonymous set download myminio/kuadre-bucket; exit 0; "
+            /bin/sh -c "
+            sleep 5;
+            mc alias set myminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+            mc mb myminio/kuadre-bucket --ignore-existing;
+            mc anonymous set download myminio/kuadre-bucket;
+            exit 0;
+            "
 
 networks:
     sail:
@@ -186,8 +199,7 @@ volumes:
         driver: local
     pgsql-data:
         driver: local
-    minio-data-prod:
-        # Volumen persistente para almacenar tus archivos en el VPS
+    minio-data-prod: # Volumen persistente para almacenar tus archivos en el VPS
         driver: local
     html:
     dhparam:

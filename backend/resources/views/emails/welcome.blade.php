@@ -22,7 +22,7 @@
             <p>Estamos emocionados de que comiences a organizar, vender y cobrar con la plataforma más moderna para comercios.</p>
             <p>Tu cuenta ha sido creada exitosamente. Tienes un periodo de prueba gratis para que explores todas nuestras funcionalidades, incluyendo inventario ilimitado y recibos automáticos por WhatsApp.</p>
             <center>
-                <a href="{{ url(env('FRONTEND_URL', 'http://localhost:5173') . '/dashboard') }}" class="btn">Entrar al Panel</a>
+                <a href="{{ url(env('APP_URL', 'http://localhost:5173') . '/dashboard') }}" class="btn">Entrar al Panel</a>
             </center>
             <p style="margin-top: 30px;">Si tienes alguna pregunta, simplemente responde a este correo o escríbenos a nuestro WhatsApp de soporte.</p>
         </div>

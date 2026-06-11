@@ -22,8 +22,8 @@
             <p>Hola, hemos recibido una solicitud para restablecer tu contraseña en Kuadre.</p>
             <p>Haz clic en el botón de abajo para asignar una nueva contraseña a tu cuenta de forma segura:</p>
             <center>
-                <a href="{{ $reset_link }}" class="btn">Restablecer Contraseña</a>
-            </center>
+    <a href="{{ $url }}" class="btn">Restablecer Contraseña</a>
+</center>
             <p style="margin-top: 30px; font-size: 13px; color: #64748b;">Si no solicitaste este cambio, puedes ignorar este correo sin problemas.</p>
         </div>
         <div class="footer">
