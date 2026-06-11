@@ -13,3 +13,6 @@
 .vscode/
 *.log
 docker-compose.local.yml
+docker-compose.prod.yml
+.env
+deploy.sh
